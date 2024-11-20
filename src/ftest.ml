@@ -30,6 +30,9 @@ let () =
   let graph = from_file infile in
 
   (* Rewrite the graph that has been read (with a modification). *)
-  let () = write_file outfile (gmap (add_arc (gmap graph int_of_string) 3 4 1) string_of_int) in
+  let out_graph = (gmap (add_arc (gmap graph int_of_string) 3 4 1) string_of_int) in
+  let () = write_file outfile out_graph in
+
+  export "dot_outfile" out_graph ;
 
   ()

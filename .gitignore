@@ -4,3 +4,5 @@ outfile
 *.exe
 .vscode/
 .idea/
+dot_outfile
+out_graph.svg
