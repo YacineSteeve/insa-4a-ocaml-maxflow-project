@@ -1,5 +1,5 @@
 (*
- 
+
   You do not need to read this file for the project. Read graph.mli instead.
 
   You may read it though, out of curiosity.
@@ -65,7 +65,7 @@ let new_arc gr arc =
 
   (* Update out-arcs. *)
   let outb = arc :: List.filter (fun a -> a.tgt <> arc.tgt) outa in
-  
+
   (* Replace out-arcs in the graph. *)
   let gr2 = List.remove_assoc arc.src gr in
   (arc.src, outb) :: gr2
