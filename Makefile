@@ -19,9 +19,9 @@ edit:
 
 demo: build
 	@echo "\n   ⚡  EXECUTING  ⚡\n"
-	./ftest.exe graphs/${graph} $(src) $(dst) outfile
+	./ftest.exe graphs/${graph} $(src) $(dst) out
 	@echo "\n   🥁  RESULT (content of outfile)  🥁\n"
-	@cat outfile
+	@cat out
 
 clean:
 	find -L . -name "*~" -delete

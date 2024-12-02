@@ -31,11 +31,10 @@ let () =
   let graph = from_file infile in
 
   (* Rewrite the graph that has been read (with a modification). *)
-  let out_graph = (gmap (add_arc (gmap graph int_of_string) 3 4 1) string_of_int) in
-  let () = write_file outfile out_graph in
-  let int_graph = (gmap out_graph int_of_string) in
-  export "dot_outfile" out_graph;
+  let () = write_file outfile graph in
+  let int_graph = (gmap graph int_of_string) in
+  export "dot_outfile" graph;
   match (find_path int_graph [] 1 5) with
-   |None -> ()
-   |Some l ->List.iter (Printf.printf "%d ") l;
-  ()
+  | None -> ()
+  | Some l -> List.iter (Printf.printf "%d ") l ;
+    ()
