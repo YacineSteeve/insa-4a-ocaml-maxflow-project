@@ -33,8 +33,7 @@ let () =
   (* Rewrite the graph that has been read (with a modification). *)
   let () = write_file outfile graph in
   let int_graph = (gmap graph int_of_string) in
-  export "dot_outfile" graph;
-  match (find_path int_graph [] 1 5) with
-  | None -> ()
-  | Some l -> List.iter (Printf.printf "%d ") l ;
+  let max_flow_graph = gmap (ff int_graph 0 5) string_of_int in
+  export "dot_outfile" max_flow_graph;
+  export "dot_infile" graph;
     ()
