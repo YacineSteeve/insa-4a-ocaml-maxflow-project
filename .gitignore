@@ -6,3 +6,5 @@ outfile
 .idea/
 dot_outfile
 out_graph.svg
+dot_infile
+in_graph.svg
