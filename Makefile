@@ -1,29 +1,30 @@
-.PHONY: all build format edit demo clean
+.PHONY: all build run format clean
 
-src?=0
-dst?=5
-graph?=graph11.txt
+WISHES_FILE := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS)) # Some witchcraft
+
+EXE_NAME?=wish_granter
+WISHES_DIR?=data/wishes
 
 all: build
 
 build:
-	@echo "\n   🚨  COMPILING  🚨 \n"
-	dune build src/ftest.exe
-	ls src/*.exe > /dev/null && ln -fs src/*.exe .
+	@echo "\n   🚨  COMPILING  🚨"
+	@dune build src/$(EXE_NAME).exe
+	@ls src/*.exe > /dev/null && ln -fs src/*.exe .
 
 format:
 	ocp-indent --inplace src/*
 
-edit:
-	code . -n
-
-demo: build
-	@echo "\n   ⚡  EXECUTING  ⚡\n"
-	./ftest.exe graphs/${graph} $(src) $(dst) out
-	@echo "\n   🥁  RESULT (content of outfile)  🥁\n"
-	@cat out
+run: build
+	@echo "\n   ⚡   EXECUTING   ⚡\n"
+	@[ `echo -n $(WISHES_FILE) | wc -c` -gt 0 ] || (echo "Please provide a wishes file name" && exit 1)
+	@[ -f $(WISHES_DIR)/$(WISHES_FILE) ] || (echo "File $(WISHES_DIR)/$(WISHES_FILE) does not exist" && exit 1)
+	@./$(EXE_NAME).exe $(WISHES_DIR)/$(WISHES_FILE)
 
 clean:
 	find -L . -name "*~" -delete
 	rm -f *.exe
 	dune clean
+
+%::
+	@true # To complete the spell

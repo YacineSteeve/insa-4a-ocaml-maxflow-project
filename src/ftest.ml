@@ -16,7 +16,6 @@ let () =
       exit 0
     end ;
 
-
   (* Arguments are : infile(1) source-id(2) sink-id(3) outfile(4) *)
 
   let infile = Sys.argv.(1)

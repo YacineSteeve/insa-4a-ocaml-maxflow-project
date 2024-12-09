@@ -1,6 +1,6 @@
 
 (executable
-   (name ftest)
+   (name wish_granter)
  ;; (libraries )
 
  ;; Disable some warnings
