@@ -43,7 +43,7 @@ let read_file wish_file_path =
           and all_wishes = List.append wishes existing_wishes in
           loop updated_graph !next_id (List.concat [[wisher]; wishes; existing_aliases]) all_wishes
         )
-        | _ -> failwith "Invalid file format"
+        | _ -> failwith "Invalid file format" (* Replace with custom error *)
     with End_of_file -> graph, id_start, existing_aliases, (List.map (fun w -> w.id) existing_wishes)
   in
     let initial_graph = new_node empty_graph source_id in
