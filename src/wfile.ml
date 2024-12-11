@@ -1,4 +1,6 @@
 open Graph
+open Gfile
+open Algo
 
 type path = id list
 
@@ -6,6 +8,8 @@ type alias = {
   id: id;
   name: string;
 }
+
+exception Format_error of string
 
 let read_file wish_file_path =
   let file = open_in wish_file_path in
@@ -43,7 +47,7 @@ let read_file wish_file_path =
           and all_wishes = List.append wishes existing_wishes in
           loop updated_graph !next_id (List.concat [[wisher]; wishes; existing_aliases]) all_wishes
         )
-        | _ -> failwith "Invalid file format" (* Replace with custom error *)
+        | _ -> raise (Format_error "Invalid wishes file format")
     with End_of_file -> graph, id_start, existing_aliases, (List.map (fun w -> w.id) existing_wishes)
   in
     let initial_graph = new_node empty_graph source_id in
@@ -54,3 +58,39 @@ let read_file wish_file_path =
   in
   close_in file ;
   final_graph, all_aliases, source_id, sink_id ;;
+
+let grant_wishes wishes_file =
+  let graph, aliases, source_id, sink_id = read_file wishes_file in
+
+  let solved_graph = ff graph source_id sink_id in
+
+  let cleaned_graph = e_fold solved_graph (
+    fun g arc -> if arc.src = source_id || arc.tgt = sink_id
+      then g
+      else (
+        let g_with_src = try new_node g arc.src with _ -> g in
+        let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
+        try new_arc g_with_src_tgt { arc with lbl = "has" } with _ -> g_with_src_tgt
+      )
+  ) empty_graph in
+
+  let result_filename = match String.split_on_char '.' wishes_file with
+    | name :: _ -> name ^ "_result"
+    | _ -> "wishes_result" in
+
+  let result_dotfile_name = result_filename ^ ".dot"
+  and result_svgfile_name = result_filename ^ ".svg" in
+
+  map_export (
+    fun node -> let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
+  ) result_dotfile_name cleaned_graph ;
+
+  let exit_code = Sys.command ("dot -Tsvg " ^ result_dotfile_name ^ " > " ^ result_svgfile_name) in
+
+  Printf.printf "%s" (
+    if exit_code = 0
+    then ("Results generated successfully (see " ^ result_svgfile_name ^ ")\n\n")
+    else "Something went wrong\n\n"
+  ) ;
+
+  ()

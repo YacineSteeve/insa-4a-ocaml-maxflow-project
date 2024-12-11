@@ -12,6 +12,8 @@ val from_file: path -> string graph
  * If necessary, use gmap (to be written by you) to prepare the input graph. *)
 val write_file: path -> string graph -> unit
 
+val map_export: (int -> string) -> path -> string graph -> unit
+
 (* Writes a string graph in dot format (the format understood by graphviz) *)
 val export: path -> string graph -> unit
 

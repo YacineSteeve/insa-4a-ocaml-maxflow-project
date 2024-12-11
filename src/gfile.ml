@@ -112,7 +112,7 @@ let from_file path =
   close_in infile ;
   final_graph
 
-let export path graph =
+let map_export f path graph =
   let out_file = open_out path in
 
   fprintf out_file "digraph finite_state_machine {
@@ -121,9 +121,11 @@ let export path graph =
 \tnode [shape = circle];
 " ;
 
-  e_iter graph (fun arc -> fprintf out_file "\t%d -> %d [label = \"%s\"]\n" arc.src arc.tgt arc.lbl);
+  e_iter graph (fun arc -> fprintf out_file "\t%s -> %s [label = \"%s\"]\n" (f arc.src) (f arc.tgt) arc.lbl);
 
   fprintf out_file "}\n" ;
 
   close_out out_file ;
   ()
+
+let export = map_export (fun v -> string_of_int v)

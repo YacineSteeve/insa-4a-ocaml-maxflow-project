@@ -3,7 +3,7 @@
 WISHES_FILE := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS)) # Some witchcraft
 
 EXE_NAME?=wish_granter
-WISHES_DIR?=data/wishes
+WISHES_DIR?=wishes
 
 all: build
 
@@ -24,6 +24,7 @@ run: build
 clean:
 	find -L . -name "*~" -delete
 	rm -f *.exe
+	rm -f *.dot
 	dune clean
 
 %::

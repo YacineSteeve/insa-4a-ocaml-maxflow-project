@@ -7,4 +7,8 @@ type alias = {
   name: string;
 }
 
+exception Format_error of string
+
 val read_file : string -> int graph * alias list * id * id
+
+val grant_wishes: string -> unit
