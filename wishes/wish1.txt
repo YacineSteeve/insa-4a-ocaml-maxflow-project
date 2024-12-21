@@ -1,2 +1,2 @@
-Yacine : Dev ; SWE
+Yacine : SWE ; Dev
 Mateo: Tech Lead ; SWE

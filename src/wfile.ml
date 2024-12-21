@@ -1,12 +1,14 @@
 open Graph
 open Gfile
 open Algo
+open Tools
 
 type path = id list
 
 type alias = {
   id: id;
   name: string;
+  weight: int;
 }
 
 exception Format_error of string
@@ -22,28 +24,41 @@ let read_file wish_file_path =
         | first :: second :: [] -> (
           let wisher = {
             id = !next_id;
-            name = String.trim first
+            name = String.trim first;
+            weight = 0;
           }
           and wishes_raw = next_id := !next_id + 1 ; String.split_on_char ';' second in
-          let wishes = List.map (
-            fun wish -> (
-              let wish_name = String.trim wish in
-              {
-                name = wish_name;
-                id = (
-                  try
-                    let existing_wish = List.find (fun w -> w.name = wish_name) existing_wishes in
-                    existing_wish.id
-                  with Not_found -> next_id := !next_id + 1 ; !next_id - 1
-                )
-              }
+          let use_index = not (String.contains line '=') || (
+            if List.for_all (fun wish_raw -> String.contains wish_raw '=') wishes_raw
+            then false
+            else raise (Format_error "Invalid wish format")
+          )
+          in
+          let wishes = List.mapi (
+            fun index wish_raw -> (
+              let wish_with_preference = String.split_on_char '=' wish_raw in
+              try
+                let wish_name = String.trim (List.hd wish_with_preference) in
+                {
+                  name = wish_name;
+                  id = (
+                    try
+                      let existing_wish = List.find (fun w -> w.name = wish_name) existing_wishes in
+                      existing_wish.id
+                    with Not_found -> next_id := !next_id + 1 ; !next_id - 1
+                  );
+                  weight = if use_index
+                    then index + 1
+                    else int_of_string (String.trim (List.nth wish_with_preference 1))
+                }
+              with _ -> raise (Format_error "Invalid wish format")
             )
           ) wishes_raw in
           let updated_graph = List.fold_left (
             fun g wish -> new_arc (
               if node_exists g wish.id then g else new_node g wish.id
-            ) { src = wisher.id; tgt = wish.id; lbl = 1 }
-          ) (new_arc (new_node graph wisher.id) { src = source_id; tgt = wisher.id; lbl = 1 }) wishes
+            ) { src = wisher.id; tgt = wish.id; lbl = wish.weight }
+          ) (new_arc (new_node graph wisher.id) { src = source_id; tgt = wisher.id; lbl = 0 }) wishes
           and all_wishes = List.append wishes existing_wishes in
           loop updated_graph !next_id (List.concat [[wisher]; wishes; existing_aliases]) all_wishes
         )
@@ -53,7 +68,7 @@ let read_file wish_file_path =
     let initial_graph = new_node empty_graph source_id in
     let inter_graph, sink_id, all_aliases, wishes_ids = loop initial_graph (source_id + 1) [] [] in
     let final_graph = List.fold_left (
-      fun g wish_id -> new_arc g { src = wish_id; tgt = sink_id; lbl = 1 }
+      fun g wish_id -> new_arc g { src = wish_id; tgt = sink_id; lbl = 0 }
     ) (new_node inter_graph sink_id) wishes_ids
   in
   close_in file ;
@@ -61,7 +76,7 @@ let read_file wish_file_path =
 
 let grant_wishes wishes_file =
   let graph, aliases, source_id, sink_id = read_file wishes_file in
-
+  map_export string_of_int "graph.dot" (gmap graph string_of_int) ; (* debug *)
   let solved_graph = ff graph source_id sink_id in
 
   let cleaned_graph = e_fold solved_graph (

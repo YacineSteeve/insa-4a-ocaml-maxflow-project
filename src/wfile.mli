@@ -5,6 +5,7 @@ type path = id list
 type alias = {
   id: id;
   name: string;
+  weight: int;
 }
 
 exception Format_error of string
