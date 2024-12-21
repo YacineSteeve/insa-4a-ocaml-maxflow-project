@@ -48,8 +48,8 @@ let read_file wish_file_path =
                     with Not_found -> next_id := !next_id + 1 ; !next_id - 1
                   );
                   weight = if use_index
-                    then index + 1
-                    else int_of_string (String.trim (List.nth wish_with_preference 1))
+                    then - (index + 1)
+                    else - (int_of_string (String.trim (List.nth wish_with_preference 1)))
                 }
               with _ -> raise (Format_error "Invalid wish format")
             )
