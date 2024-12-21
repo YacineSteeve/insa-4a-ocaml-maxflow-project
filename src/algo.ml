@@ -19,6 +19,46 @@ let rec find_path graph forbidden src tgt =
     loop_children (List.filter (fun e -> not (List.exists (fun f -> f = e) forbidden)) (children graph src))
   )
 
+let find_shortest_path graph src tgt =
+  if src = tgt
+  then Some [src]
+  else (
+    let nodes_count = n_fold graph (fun c _ -> c + 1) 0 in
+    let costs = Hashtbl.create nodes_count
+    and predecessors  = Hashtbl.create nodes_count in
+    n_iter graph (fun node -> Hashtbl.replace costs node max_int) ;
+    Hashtbl.replace costs src 0 ;
+    let rec loop_nodes n =
+      if n < nodes_count
+      then (
+        e_iter graph (fun arc ->
+          let new_cost = arc.lbl + (Hashtbl.find costs arc.src) in
+          if new_cost < (Hashtbl.find costs arc.tgt) then
+            Hashtbl.replace costs arc.tgt new_cost ;
+            Hashtbl.replace predecessors arc.tgt arc.src
+        ) ;
+        loop_nodes (n + 1)
+      )
+      in
+    let _ = loop_nodes 1 in
+    let rec build_path acc child =
+      if child = src
+      then Some acc
+      else (
+        try
+          let parent = Hashtbl.find predecessors child in
+          build_path (parent :: acc) parent
+        with Not_found -> None
+      )
+      in
+    Seq.iter (fun (k, v) -> Printf.printf "%d -> %d \n" k v) (Hashtbl.to_seq costs) ;
+    match build_path [tgt] tgt with
+      | None -> None
+      | Some path ->
+      List.iter (Printf.printf "%d ") path ;
+      Printf.printf "\n" ; Some path
+  )
+
 let init_flow_graph graph = e_fold graph (fun g arc -> add_arc g arc.src arc.tgt 0) (clone_nodes graph)
 
 let rec get_flow_increment graph = function
@@ -47,7 +87,8 @@ let get_final_graph initial_graph residual_graph =
 
 let ff graph src tgt =
   let rec loop residual_graph = (
-    match find_path residual_graph [] src tgt with
+    (*match find_path residual_graph [] src tgt with*)
+    match find_shortest_path residual_graph src tgt with
     | None -> residual_graph
     | Some path -> (
       let flow_increment = get_flow_increment residual_graph path in
