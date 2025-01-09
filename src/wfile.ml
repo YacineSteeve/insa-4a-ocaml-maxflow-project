@@ -11,13 +11,12 @@ type alias = {
 
 exception Format_error of string
 
-let read_file wish_file_path =
-  let file = open_in wish_file_path in
-  let source_id = 0 in
-  let rec loop graph id_start existing_aliases existing_wishes =
+let parse_wishes_file wishes_file_path =
+  let file = open_in wishes_file_path in
+  let rec loop_lines start_id aliases wisher_wishes_assocs existing_wishes = (
     try
       let line = input_line file in
-      let next_id = ref id_start in
+      let next_id = ref start_id in
       match String.split_on_char ':' line with
       | first :: second :: [] -> (
           let wisher = {
@@ -39,25 +38,18 @@ let read_file wish_file_path =
                   }
                 )
             ) wishes_raw in
-          let updated_graph = List.fold_left (
-              fun g wish -> new_arc (
-                  if node_exists g wish.id then g else new_node g wish.id
-                ) { src = wisher.id; tgt = wish.id; lbl = 1 }
-            ) (new_arc (new_node graph wisher.id) { src = source_id; tgt = wisher.id; lbl = 1 }) wishes
-          and all_wishes = List.append wishes existing_wishes in
-          loop updated_graph !next_id (List.concat [[wisher]; wishes; existing_aliases]) all_wishes
+          let updated_aliases = (List.concat [[wisher]; wishes; aliases])
+          and updated_wisher_wishes_assocs = (wisher.id, List.map (fun w -> w.id) wishes) :: wisher_wishes_assocs
+          and updated_wishes = List.append wishes existing_wishes in
+          loop_lines !next_id updated_aliases updated_wisher_wishes_assocs updated_wishes
         )
       | _ -> raise (Format_error "Invalid wishes file format")
-    with End_of_file -> graph, id_start, existing_aliases, (List.map (fun w -> w.id) existing_wishes)
-  in
-  let initial_graph = new_node empty_graph source_id in
-  let inter_graph, sink_id, all_aliases, wishes_ids = loop initial_graph (source_id + 1) [] [] in
-  let final_graph = List.fold_left (
-      fun g wish_id -> new_arc g { src = wish_id; tgt = sink_id; lbl = 1 }
-    ) (new_node inter_graph sink_id) wishes_ids
-  in
+    with End_of_file -> start_id, aliases, wisher_wishes_assocs
+  )
+  and source_id = 0 in
+  let sink_id, aliases, wisher_wishes_assocs = loop_lines (source_id + 1) [] [] [] in
   close_in file ;
-  final_graph, all_aliases, source_id, sink_id
+  (source_id, sink_id, aliases, wisher_wishes_assocs)
 
 let rec list_append_uniq l = function
   | [] -> l
@@ -68,15 +60,15 @@ let build_wishes_graph source_id sink_id wisher_wishes_assocs =
   let rec loop_assocs graph wishes_ids_acc = function
     | [] -> graph, wishes_ids_acc
     | (wisher_id, wishes_ids) :: rest -> (
-      let graph_with_wisher = try new_node graph wisher_id with Graph_error _ -> graph in
-      let updated_graph = List.fold_left (
-        fun g wish_id -> (
-          let g_with_wish = try new_node g wish_id with Graph_error _ -> g in
-          new_arc g_with_wish { src = wisher_id; tgt = wish_id; lbl = 1 }
-        )
-      ) (new_arc graph_with_wisher { src = source_id; tgt = wisher_id; lbl = 1 }) wishes_ids in
-      loop_assocs updated_graph (list_append_uniq wishes_ids_acc wishes_ids) rest
-    ) in
+        let graph_with_wisher = try new_node graph wisher_id with Graph_error _ -> graph in
+        let updated_graph = List.fold_left (
+            fun g wish_id -> (
+                let g_with_wish = try new_node g wish_id with Graph_error _ -> g in
+                new_arc g_with_wish { src = wisher_id; tgt = wish_id; lbl = 1 }
+              )
+          ) (new_arc graph_with_wisher { src = source_id; tgt = wisher_id; lbl = 1 }) wishes_ids in
+        loop_assocs updated_graph (list_append_uniq wishes_ids_acc wishes_ids) rest
+      ) in
   let partial_graph, wishes_ids = loop_assocs initial_graph [] wisher_wishes_assocs in
   List.fold_left (
     fun graph wish_id -> new_arc graph { src = wish_id; tgt = sink_id; lbl = 1 }
@@ -92,8 +84,9 @@ let format_result_graph graph source_id sink_id = e_fold graph (
       )
   ) empty_graph
 
-let compute_result_graph wishes_file =
-  let graph, aliases, source_id, sink_id = read_file wishes_file in
+let compute_result_graph wishes_file_path =
+  let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
+  let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
   let solved_graph = ff graph source_id sink_id in
   let result_graph = format_result_graph solved_graph source_id sink_id in
   (result_graph, aliases)
@@ -113,7 +106,7 @@ let grant_wishes wishes_file =
   ) result_dotfile_name result_graph ;
 
   let exit_code = Sys.command (
-      "dot -Tsvg " ^ result_dotfile_name ^ " > " ^ result_svgfile_name ^ " && rm " ^ result_dotfile_name
+      "dot -Tsvg " ^ result_dotfile_name ^ " > " ^ result_svgfile_name
     ) in
 
   Printf.printf "%s" (

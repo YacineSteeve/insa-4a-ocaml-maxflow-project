@@ -9,7 +9,7 @@ type alias = {
 
 exception Format_error of string
 
-val read_file : string -> int graph * alias list * id * id
+val parse_wishes_file : string -> id * id * alias list * (id * id list) list
 
 val list_append_uniq : 'a list -> 'a list -> 'a list
 

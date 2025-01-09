@@ -1,2 +1,4 @@
-Yacine : Dev ; SWE
+Yacine : HR ; SWE
 Mateo: Tech Lead ; SWE
+Sophie: Manager ; DevOps
+Paul: Tech Lead
