@@ -1,4 +1,4 @@
-  open Graph
+open Graph
 
 type path = id list
 

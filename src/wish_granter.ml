@@ -1,17 +1,17 @@
 open Wfile
 
 let () =
-  if Array.length Sys.argv <> 2 && Array.length Sys.argv <> 3 then
+  if Array.length Sys.argv <> 2 then
     begin
       Printf.printf
-        "\n ✻  Usage: %s wishes_file [outfile]\n\n%s%!" Sys.argv.(0)
-        ("    🟄  wishes_file  : input file containing the wishes of the job seekers.\n\n") ;
+        "\nUsage: %s wishes_file\n%s%!" Sys.argv.(0)
+        ("    🟄  wishes_file  : input file containing the people and their list wishes.\n\n") ;
 
-      exit 0
+      exit 1
     end ;
 
-    let wishes_file = Sys.argv.(1) in
+  let wishes_file = Sys.argv.(1) in
 
-    grant_wishes wishes_file ;
+  grant_wishes wishes_file ;
 
-    ()
+  ()

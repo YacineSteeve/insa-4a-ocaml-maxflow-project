@@ -36,13 +36,13 @@ let rec update_flow_graph graph increment = function
 let rec update_residual_graph graph increment = function
   | []  | [_] -> graph
   | src :: tgt :: rest ->
-      update_residual_graph (add_arc (add_arc graph src tgt (-increment)) tgt src increment) increment (tgt :: rest)
+    update_residual_graph (add_arc (add_arc graph src tgt (-increment)) tgt src increment) increment (tgt :: rest)
 
 let get_final_graph initial_graph residual_graph =
   e_fold initial_graph (
-  fun g arc -> match find_arc residual_graph arc.tgt arc.src with
-    | None -> g
-    | Some residual_arc -> new_arc g { arc with lbl = residual_arc.lbl }
+    fun g arc -> match find_arc residual_graph arc.tgt arc.src with
+      | None -> g
+      | Some residual_arc -> new_arc g { arc with lbl = residual_arc.lbl }
   ) (clone_nodes initial_graph)
 
 let ff graph src tgt =
@@ -50,8 +50,8 @@ let ff graph src tgt =
     match find_path residual_graph [] src tgt with
     | None -> residual_graph
     | Some path -> (
-      let flow_increment = get_flow_increment residual_graph path in
-      loop (update_residual_graph residual_graph flow_increment path)
-    )
+        let flow_increment = get_flow_increment residual_graph path in
+        loop (update_residual_graph residual_graph flow_increment path)
+      )
   ) in
   get_final_graph graph (loop graph)
