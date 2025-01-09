@@ -1,6 +1,7 @@
 open Graph
 open Gfile
 open Algo
+open Tools
 
 type path = id list
 
@@ -84,12 +85,20 @@ let format_result_graph graph source_id sink_id = e_fold graph (
       )
   ) empty_graph
 
+let in_arcs graph node = e_fold graph (fun l arc -> if arc.tgt = node then arc :: l else l) []
+
+let clean_result_graph graph = e_fold graph (
+    fun g arc -> if List.length (out_arcs graph arc.src) > 1 && List.length (in_arcs graph arc.tgt) > 1
+    then g
+    else new_arc g arc
+  ) (clone_nodes graph)
+
 let compute_result_graph wishes_file_path =
   let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
   let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
   let solved_graph = ff graph source_id sink_id in
   let result_graph = format_result_graph solved_graph source_id sink_id in
-  (result_graph, aliases)
+  (clean_result_graph result_graph, aliases)
 
 let get_result_filenames wishes_filename =
   let result_filename = match String.split_on_char '.' wishes_filename with

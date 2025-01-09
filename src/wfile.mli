@@ -17,6 +17,10 @@ val build_wishes_graph : id -> id -> (id * id list) list -> int graph
 
 val format_result_graph : int graph -> id -> id -> string graph
 
+val in_arcs : int graph -> id -> int arc list
+
+val clean_result_graph : int graph -> int graph
+
 val compute_result_graph : string -> string graph * alias list
 
 val get_result_filenames : string -> string * string

@@ -1,0 +1,6 @@
+Yacine : HR ; SWE
+Mateo :  Tech Lead ; SWE
+Sophie :Manager ; DevOps
+Paul : Tech Lead ;
+  Alex : Leader ; Designer
+Chris SWE ; Manager

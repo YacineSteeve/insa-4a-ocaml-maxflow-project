@@ -1,4 +1,3 @@
-Yacine : HR ; SWE
-Mateo: Tech Lead ; SWE
-Sophie: Manager ; DevOps
-Paul: Tech Lead
+Alice : Teacher ; Coach
+Bob : Engineer ; Teacher
+Charlie : Designer ; Engineer

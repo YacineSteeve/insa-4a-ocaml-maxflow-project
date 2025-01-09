@@ -1,0 +1,10 @@
+Liam : Runner ; Cyclist
+Emma : Swimmer ; Runner
+Noah : Cyclist ; Swimmer
+Olivia : Runner ; Body Builder
+Sophia : Runner ; Swimmer
+Lucas : Cyclist ; Swimmer
+Amelia : Runner ; Cyclist
+Ethan : Cyclist ; Runner
+Charlotte : Swimmer ; Cyclist
+Mason : Runner ; Swimmer
