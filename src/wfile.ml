@@ -17,11 +17,11 @@ let parse_wishes_file wishes_file_path =
   let rec loop_lines start_id aliases wisher_wishes_assocs existing_wishes = (
     try
       let line = input_line file in
-      let next_id = ref start_id in
+      let next_id = ref start_id in (* To keep track of state of the ids sequence for the current line *)
       match String.split_on_char ':' line with
       | first :: second :: [] -> (
           let wisher = {
-            id = !next_id;
+            id = !next_id; (* The wisher takes the next available id *)
             name = String.trim first
           }
           and wishes_raw = next_id := !next_id + 1 ; String.split_on_char ';' second in
@@ -31,10 +31,14 @@ let parse_wishes_file wishes_file_path =
                   {
                     name = wish_name;
                     id = (
+                      (* Each wish is associated to:
+                       * either the existing id if it was been seen before
+                       * or the next available id
+                      *)
                       try
                         let existing_wish = List.find (fun w -> w.name = wish_name) existing_wishes in
                         existing_wish.id
-                      with Not_found -> next_id := !next_id + 1 ; !next_id - 1
+                      with Not_found -> next_id := !next_id + 1 ; !next_id - 1 (* Pre increment *)
                     )
                   }
                 )
@@ -45,17 +49,21 @@ let parse_wishes_file wishes_file_path =
           loop_lines !next_id updated_aliases updated_wisher_wishes_assocs updated_wishes
         )
       | _ -> raise (Format_error "Invalid wishes file format")
-    with End_of_file -> start_id, aliases, wisher_wishes_assocs
+    with End_of_file -> start_id, aliases, wisher_wishes_assocs (* sink_id being the last value of start_id *)
   )
   and source_id = 0 in
   let sink_id, aliases, wisher_wishes_assocs = loop_lines (source_id + 1) [] [] [] in
   close_in file ;
   (source_id, sink_id, aliases, wisher_wishes_assocs)
 
+(* Append a list to l, by ignoring elements already in l *)
 let rec list_append_uniq l = function
   | [] -> l
   | x :: rest -> list_append_uniq (if List.mem x l then l else x :: l) rest
 
+(* Connect source to wishers, wishers to wishes, and wishes to sink
+ * Labels are set to 1 to make the Ford-Fulkerson algorithm act as a bipartite matching one
+*)
 let build_wishes_graph source_id sink_id wisher_wishes_assocs =
   let initial_graph = new_node empty_graph source_id in
   let rec loop_assocs graph wishes_ids_acc = function
@@ -76,12 +84,12 @@ let build_wishes_graph source_id sink_id wisher_wishes_assocs =
   ) (new_node partial_graph sink_id) wishes_ids
 
 let format_result_graph graph source_id sink_id = e_fold graph (
-    fun g arc -> if arc.src = source_id || arc.tgt = sink_id
+    fun g arc -> if arc.src = source_id || arc.tgt = sink_id (* Removing source and sink in final graph *)
       then g
       else (
         let g_with_src = try new_node g arc.src with _ -> g in
         let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
-        try new_arc g_with_src_tgt { arc with lbl = "has" } with _ -> g_with_src_tgt
+        try new_arc g_with_src_tgt { arc with lbl = "has" } with _ -> g_with_src_tgt (* Use of a more relevant label *)
       )
   ) empty_graph
 
@@ -89,8 +97,8 @@ let in_arcs graph node = e_fold graph (fun l arc -> if arc.tgt = node then arc :
 
 let clean_result_graph graph = e_fold graph (
     fun g arc -> if List.length (out_arcs graph arc.src) > 1 && List.length (in_arcs graph arc.tgt) > 1
-    then g
-    else new_arc g arc
+      then g
+      else new_arc g arc
   ) (clone_nodes graph)
 
 let compute_result_graph wishes_file_path =
@@ -110,6 +118,7 @@ let grant_wishes wishes_file =
   let result_dotfile_name, result_svgfile_name = get_result_filenames wishes_file
   and result_graph, aliases = compute_result_graph wishes_file in
 
+  (* Generation of the dotfile, putting node values between quotes to prevent parsing errors due to spaces *)
   map_export (
     fun node -> let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
   ) result_dotfile_name result_graph ;
