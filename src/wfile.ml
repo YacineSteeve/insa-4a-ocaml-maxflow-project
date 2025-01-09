@@ -105,8 +105,8 @@ let compute_result_graph wishes_file_path =
   let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
   let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
   let solved_graph = ff graph source_id sink_id in
-  let result_graph = format_result_graph solved_graph source_id sink_id in
-  (clean_result_graph result_graph, aliases)
+  let _result_graph = format_result_graph solved_graph source_id sink_id in
+  (solved_graph, aliases)
 
 let get_result_filenames wishes_filename =
   let result_filename = match String.split_on_char '.' wishes_filename with
@@ -120,8 +120,8 @@ let grant_wishes wishes_file =
 
   (* Generation of the dotfile, putting node values between quotes to prevent parsing errors due to spaces *)
   map_export (
-    fun node -> let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
-  ) result_dotfile_name result_graph ;
+    fun node -> let node_alias = try List.find (fun alias -> alias.id = node) aliases with _ -> { id = 1; name =  string_of_int node } in "\"" ^ node_alias.name ^ "\""
+  ) result_dotfile_name (gmap result_graph string_of_int) ;
 
   let exit_code = Sys.command (
       "dot -Tsvg " ^ result_dotfile_name ^ " > " ^ result_svgfile_name

@@ -21,7 +21,7 @@ val in_arcs : int graph -> id -> int arc list
 
 val clean_result_graph : int graph -> int graph
 
-val compute_result_graph : string -> string graph * alias list
+val compute_result_graph : string -> int graph * alias list
 
 val get_result_filenames : string -> string * string
 
