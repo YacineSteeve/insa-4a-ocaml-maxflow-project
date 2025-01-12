@@ -9,7 +9,7 @@ a matching that satisfies the majority.
 
 To run the program, you have to follow these steps:
 
-1. In the <code>[wishes/](wishes/)</code> directory, you will find some `.txt` files, along with `.svg` files.
+1. In the `wishes/` directory, you will find some `.txt` files, along with `.svg` files.
    The `.txt` files are the test cases, and the `.svg` files are their corresponding output. \
    To write your own test case, add a new `.txt` file and fill it with your data. \
    Considering a set 
@@ -43,7 +43,7 @@ The Ford-Fulkerson algorithm have been implemented and is fully functional. See 
 ### ✅ Medium project
 
 The algorithm is used to solve a Maximum Bipartite Matching problem, given input files (`.txt` files) located in the 
-[wishes/](wishes/) directory.
+`wishes/` directory.
 
 ### ⏳ Better project
 
@@ -59,6 +59,39 @@ will be represented by an arc from <code>p<sub>i</sub></code> to <code>w<sub>i</
 
 With this model, considering that in the wish file, the most preferred wish is the one with the highest preference value, 
 the program would generate the matching that satisfies the majority AND satisfies the most each person.
+
+## Algorithm steps
+
+<table>
+    <thead>
+        <tr>
+            <th>Step 1 (Input file)</th>
+            <th>Step 2 (Parsing and translation)</th>
+        </tr>
+    </thead>
+    <tbody align="center">
+        <td>
+            <img src="docs-assets/txt.png" alt="Txt" style="border: 1px solid white" />
+        </td>
+        <td>
+            <img src="docs-assets/model.png" alt="Model" />
+        </td>
+    </tbody>
+    <thead>
+        <tr>
+            <th>Step 3 (Solving with Ford-Fulkerson)</th>
+            <th>Step 4 (Result generation)</th>
+        </tr>
+    </thead>
+    <tbody align="center">
+        <td>
+            <img src="docs-assets/solved.png" alt="Solved" />
+        </td>
+        <td>
+            <img src="docs-assets/result.png"  alt="Result"/>
+        </td>
+    </tbody>
+</table>
 
 ## Structure
 
