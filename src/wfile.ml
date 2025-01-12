@@ -2,8 +2,6 @@ open Graph
 open Gfile
 open Algo
 
-type path = id list
-
 type alias = {
   id: id;
   name: string;
@@ -11,6 +9,11 @@ type alias = {
 
 exception Format_error of string
 
+(*
+ * Extract data from the provided file and format it for future usage in the program
+ *
+ * string -> id * id * alias list * (id * id list) list
+ *)
 let parse_wishes_file wishes_file_path =
   let file = open_in wishes_file_path in
   let rec loop_lines start_id aliases wisher_wishes_assocs existing_wishes = (
@@ -55,14 +58,21 @@ let parse_wishes_file wishes_file_path =
   close_in file ;
   (source_id, sink_id, aliases, wisher_wishes_assocs)
 
-(* Append a list to l, by ignoring elements already in l *)
+(*
+ * Append a list to l, by ignoring elements already in l
+ *
+ * 'a list -> 'a list -> 'a list
+ *)
 let rec list_append_uniq l = function
   | [] -> l
   | x :: rest -> list_append_uniq (if List.mem x l then l else x :: l) rest
 
-(* Connect source to wishers, wishers to wishes, and wishes to sink
+(*
+ * Connect source to wishers, wishers to wishes, and wishes to sink
  * Labels are set to 1 to make the Ford-Fulkerson algorithm act as a bipartite matching one
-*)
+ *
+ * id -> id -> (id * id list) list -> int graph
+ *)
 let build_wishes_graph source_id sink_id wisher_wishes_assocs =
   let initial_graph = new_node empty_graph source_id in
   let rec loop_assocs graph wishes_ids_acc = function
@@ -82,6 +92,9 @@ let build_wishes_graph source_id sink_id wisher_wishes_assocs =
     fun graph wish_id -> new_arc graph { src = wish_id; tgt = sink_id; lbl = 1 }
   ) (new_node partial_graph sink_id) wishes_ids
 
+(*
+ * int graph -> id -> id -> string graph
+ *)
 let clean_solved_graph graph source_id sink_id = e_fold graph (
   fun g arc -> if arc.src = source_id || arc.tgt = sink_id || arc.lbl = 0 (* Removing source, sink, and null arcs from final graph *)
     then g
@@ -92,6 +105,9 @@ let clean_solved_graph graph source_id sink_id = e_fold graph (
     )
   ) empty_graph
 
+(*
+ * string -> string graph * alias list
+ *)
 let compute_result_graph wishes_file_path =
   let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
   let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
@@ -99,6 +115,9 @@ let compute_result_graph wishes_file_path =
   let result_graph = clean_solved_graph solved_graph source_id sink_id in
   (result_graph, aliases)
 
+(*
+ * string -> string * string
+ *)
 let get_result_filenames wishes_filename =
   let result_filename = match String.split_on_char '.' wishes_filename with
     | name :: _ -> name ^ "_result"

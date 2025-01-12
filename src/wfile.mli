@@ -1,26 +1,3 @@
-open Graph
-
-type path = id list
-
-type alias = {
-  id: id;
-  name: string;
-}
-
 exception Format_error of string
-
-(* Every  interfaces are defined to help during the development process *)
-
-val parse_wishes_file : string -> id * id * alias list * (id * id list) list
-
-val list_append_uniq : 'a list -> 'a list -> 'a list
-
-val build_wishes_graph : id -> id -> (id * id list) list -> int graph
-
-val clean_solved_graph : int graph -> id -> id -> string graph
-
-val compute_result_graph : string -> string graph * alias list
-
-val get_result_filenames : string -> string * string
 
 val grant_wishes: string -> unit
