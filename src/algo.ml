@@ -21,17 +21,17 @@ let children graph node = List.fold_left (fun l arc -> if arc.lbl != 0 then arc.
 let find_any_path graph src tgt =
   let rec search graph forbidden src tgt =
     if src = tgt
-      then Some [src]
-      else (
-        let rec loop_children = function
-          | [] -> None
-          | child :: rest -> (
-              match search graph (src :: forbidden) child tgt with
-              | None -> loop_children rest
-              | Some path -> Some (src :: path)
-            ) in
-        loop_children (List.filter (fun e -> not (List.exists (fun f -> f = e) forbidden)) (children graph src))
-      ) in
+    then Some [src]
+    else (
+      let rec loop_children = function
+        | [] -> None
+        | child :: rest -> (
+            match search graph (src :: forbidden) child tgt with
+            | None -> loop_children rest
+            | Some path -> Some (src :: path)
+          ) in
+      loop_children (List.filter (fun e -> not (List.exists (fun f -> f = e) forbidden)) (children graph src))
+    ) in
   search graph [] src tgt
 
 (*
@@ -52,14 +52,14 @@ let find_shortest_path graph src tgt =
       if n < nodes_count
       then (
         e_iter graph (fun arc ->
-          let new_cost = arc.lbl + (Hashtbl.find costs arc.src) in
-          if new_cost < (Hashtbl.find costs arc.tgt) then
-            Hashtbl.replace costs arc.tgt new_cost ;
+            let new_cost = arc.lbl + (Hashtbl.find costs arc.src) in
+            if new_cost < (Hashtbl.find costs arc.tgt) then
+              Hashtbl.replace costs arc.tgt new_cost ;
             Hashtbl.replace predecessors arc.tgt arc.src
-        ) ;
+          ) ;
         loop_nodes (n + 1)
       )
-      in
+    in
     let _ = loop_nodes 1 in
     let rec build_path acc child =
       if child = src
@@ -70,11 +70,11 @@ let find_shortest_path graph src tgt =
           build_path (parent :: acc) parent
         with Not_found -> None
       )
-      in
+    in
     Seq.iter (fun (k, v) -> Printf.printf "%d -> %d \n" k v) (Hashtbl.to_seq costs) ;
     match build_path [tgt] tgt with
-      | None -> None
-      | Some path ->
+    | None -> None
+    | Some path ->
       List.iter (Printf.printf "%d ") path ;
       Printf.printf "\n" ; Some path
   )

@@ -96,13 +96,13 @@ let build_wishes_graph source_id sink_id wisher_wishes_assocs =
  * int graph -> id -> id -> string graph
  *)
 let clean_solved_graph graph source_id sink_id = e_fold graph (
-  fun g arc -> if arc.src = source_id || arc.tgt = sink_id || arc.lbl = 0 (* Removing source, sink, and null arcs from final graph *)
-    then g
-    else (
-      let g_with_src = try new_node g arc.src with _ -> g in
-      let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
-      try new_arc g_with_src_tgt {arc with lbl = "has" } with _ -> g_with_src_tgt
-    )
+    fun g arc -> if arc.src = source_id || arc.tgt = sink_id || arc.lbl = 0 (* Removing source, sink, and null arcs from final graph *)
+      then g
+      else (
+        let g_with_src = try new_node g arc.src with _ -> g in
+        let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
+        try new_arc g_with_src_tgt {arc with lbl = "has" } with _ -> g_with_src_tgt
+      )
   ) empty_graph
 
 (*
@@ -111,7 +111,7 @@ let clean_solved_graph graph source_id sink_id = e_fold graph (
 let compute_result_graph wishes_file_path =
   let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
   let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
-  let solved_graph = ff graph source_id sink_id in
+  let solved_graph = ff graph source_id sink_id in (* Use of Ford-Fulkerson *)
   let result_graph = clean_solved_graph solved_graph source_id sink_id in
   (result_graph, aliases)
 
@@ -131,13 +131,13 @@ let grant_wishes wishes_file =
   (* Generation of the dotfile
    * - remapping node ids to their actual display names
    * - putting names between quotes to prevent dotfile parsing errors due to spaces
-   *)
+  *)
   map_export (
     fun node -> (
-      try
-        let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
-      with _ -> "Unknown"
-    )
+        try
+          let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
+        with _ -> "Unknown"
+      )
   ) result_dotfile_name result_graph ;
 
   let exit_code = Sys.command (
