@@ -1,7 +1,6 @@
 open Graph
 open Gfile
 open Algo
-open Tools
 
 type path = id list
 
@@ -83,30 +82,22 @@ let build_wishes_graph source_id sink_id wisher_wishes_assocs =
     fun graph wish_id -> new_arc graph { src = wish_id; tgt = sink_id; lbl = 1 }
   ) (new_node partial_graph sink_id) wishes_ids
 
-let format_result_graph graph source_id sink_id = e_fold graph (
-    fun g arc -> if arc.src = source_id || arc.tgt = sink_id (* Removing source and sink in final graph *)
-      then g
-      else (
-        let g_with_src = try new_node g arc.src with _ -> g in
-        let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
-        try new_arc g_with_src_tgt { arc with lbl = "has" } with _ -> g_with_src_tgt (* Use of a more relevant label *)
-      )
+let clean_solved_graph graph source_id sink_id = e_fold graph (
+  fun g arc -> if arc.src = source_id || arc.tgt = sink_id || arc.lbl = 0 (* Removing source, sink, and null arcs from final graph *)
+    then g
+    else (
+      let g_with_src = try new_node g arc.src with _ -> g in
+      let g_with_src_tgt = try new_node g_with_src arc.tgt with _ -> g_with_src in
+      try new_arc g_with_src_tgt {arc with lbl = "has" } with _ -> g_with_src_tgt
+    )
   ) empty_graph
-
-let in_arcs graph node = e_fold graph (fun l arc -> if arc.tgt = node then arc :: l else l) []
-
-let clean_result_graph graph = e_fold graph (
-    fun g arc -> if List.length (out_arcs graph arc.src) > 1 && List.length (in_arcs graph arc.tgt) > 1
-      then g
-      else new_arc g arc
-  ) (clone_nodes graph)
 
 let compute_result_graph wishes_file_path =
   let source_id, sink_id, aliases, wisher_wishes_assocs = parse_wishes_file wishes_file_path in
   let graph = build_wishes_graph source_id sink_id wisher_wishes_assocs in
   let solved_graph = ff graph source_id sink_id in
-  let _result_graph = format_result_graph solved_graph source_id sink_id in
-  (solved_graph, aliases)
+  let result_graph = clean_solved_graph solved_graph source_id sink_id in
+  (result_graph, aliases)
 
 let get_result_filenames wishes_filename =
   let result_filename = match String.split_on_char '.' wishes_filename with
@@ -118,10 +109,17 @@ let grant_wishes wishes_file =
   let result_dotfile_name, result_svgfile_name = get_result_filenames wishes_file
   and result_graph, aliases = compute_result_graph wishes_file in
 
-  (* Generation of the dotfile, putting node values between quotes to prevent parsing errors due to spaces *)
+  (* Generation of the dotfile
+   * - remapping node ids to their actual display names
+   * - putting names between quotes to prevent dotfile parsing errors due to spaces
+   *)
   map_export (
-    fun node -> let node_alias = try List.find (fun alias -> alias.id = node) aliases with _ -> { id = 1; name =  string_of_int node } in "\"" ^ node_alias.name ^ "\""
-  ) result_dotfile_name (gmap result_graph string_of_int) ;
+    fun node -> (
+      try
+        let node_alias = List.find (fun alias -> alias.id = node) aliases in "\"" ^ node_alias.name ^ "\""
+      with _ -> "Unknown"
+    )
+  ) result_dotfile_name result_graph ;
 
   let exit_code = Sys.command (
       "dot -Tsvg " ^ result_dotfile_name ^ " > " ^ result_svgfile_name

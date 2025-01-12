@@ -8,7 +8,7 @@ type path = id list
  *)
 let children graph node = List.fold_left (fun l arc -> if arc.lbl != 0 then arc.tgt :: l else l) [] (out_arcs graph node)
 
-(* BFS *)
+(* DFS *)
 let rec find_path graph forbidden src tgt =
   if src = tgt
   then Some [src]
